@@ -13,6 +13,9 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * PVI does not account for Washington DC which is a district but not a state
 * DC rows may need to be removed
 * As of November 24, 2021, the notebook outputs a sample of data.
+* Fix zip codes that are not 5 digits with leading 0s
+* Some zip codes are missing -- figure out what is happening here
+* one business column has a typo in the column name
 
 ## Dataset sources
 
