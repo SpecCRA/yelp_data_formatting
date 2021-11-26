@@ -35,3 +35,4 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * One business column has a typo in the column name
 * Add population density of county and/or state through census data
 * Split date into separate year, month, and day columns.
+* Upload accompanying state, CPI, and county data files to drive.
