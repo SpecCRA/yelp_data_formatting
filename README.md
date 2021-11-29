@@ -16,6 +16,7 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * As of November 24, 2021, the notebook outputs a sample of data.
 * Date data (year, month, day) are all based on the review date.
 * Data only contains restaurants.
+* Data only contains businesses from 29 of 50 states.
 
 
 ## Dataset sources
@@ -33,9 +34,11 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Write code to process entire dataset.
 * Filter out businesses that are not restaurants. - DONE
 * Fix zip codes that are not 5 digits with leading 0s - DONE
-* Some zip codes are missing -- figure out what is happening here
+* Some zip codes are missing -- figure out what is happening here - DONE
 * One business column has a typo in the column name - DONE
-* Add population density of county and/or state through census data
+* Add population density of county and/or state through census data - DONE
 * Split date into separate year, month, and day columns. - DONE
 * Upload accompanying state, CPI, and county data files to drive. - DONE
 * Rewrite average rating cell to process more efficiently.
+* Add a visual map of what states are included within dataset.
+* Make a bar chart to count how many reviews are in each state.
