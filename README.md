@@ -22,6 +22,7 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Date data (year, month, day) are all based on the review date.
 * Dataset only contains restaurants.
 * Restaurants' review totals and average star rating is based solely on this dataset.
+* IRS adjusted gross income doc: https://www.irs.gov/e-file-providers/definition-of-adjusted-gross-income
 
 
 ## Dataset sources
@@ -31,6 +32,8 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Election data: https://electionlab.mit.edu/data
 * Zip code to counties: https://simplemaps.com/data/us-zips
 * Population density: https://www.census.gov/data/tables/time-series/dec/density-data-text.html
+* 2019 Income by zip code: https://www.irs.gov/statistics/soi-tax-stats-individual-income-tax-statistics-2019-zip-code-data-soi
+* Age, urban status, etc: IPUMS
 
 
 ## To do
@@ -44,7 +47,13 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Add population density of county and/or state through census data - DONE
 * Split date into separate year, month, and day columns. - DONE
 * Upload accompanying state, CPI, and county data files to drive. - DONE
-* Rewrite average rating cell to process more efficiently. - MAYBE
+* Rewrite average rating cell to process more efficiently. - keeping because some rows were filtered out 
+* Add new utility script to load and work on main files.
 * Add a visual map of what states are included within dataset.
 * Make a bar chart to count how many reviews are in each state.
 * Additional EDA.
+
+## Tools
+
+* Jupyter Lab
+* Python
