@@ -28,12 +28,27 @@ REVIEW_DTYPES = {
 
 ZIPS_DTYPES = {
     'zip': np.str,
+    'state': np.str,
     'county': np.str
+}
+
+INCOME_DTYPES = {
+    'STATE': np.str,
+    'zipcode': np.str,
+    'ELDERLY': np.int,
+    'N1': np.int,
+    'N2': np.int,
+    'A00100': np.float,
+    'N02550': np.float,
+    'N02650': np.float,
+    'A02650': np.float
 }
 
 COLS = {
     'users': ['user_id', 'review_count'],
     'business': ['business_id', 'state', 'city', 'postal_code', 'categories', 'stars', 'review_count'],
     'reviews': ['review_id', 'user_id', 'business_id', 'date', 'stars', 'useful'],
-    'zipcode': ['zip', 'county']
+    'zipcode': ['zip', 'state', 'county'],
+    'population': ['Name', 'Year', 'Resident Population', 'Geography Type', 'Resident Population Density'],
+    'income': ['STATE', 'zipcode', 'N1', 'N2', 'ELDERLY', 'A00100', 'N02650', 'A02650']
 }
