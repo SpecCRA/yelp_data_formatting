@@ -46,9 +46,14 @@ INCOME_DTYPES = {
 
 COLS = {
     'users': ['user_id', 'review_count'],
+    'county': ['state_po', 'county_name', 'perc_diffs'],
     'business': ['business_id', 'state', 'city', 'postal_code', 'categories', 'stars', 'review_count'],
     'reviews': ['review_id', 'user_id', 'business_id', 'date', 'stars', 'useful'],
     'zipcode': ['zip', 'state', 'county'],
     'population': ['Name', 'Year', 'Resident Population', 'Geography Type', 'Resident Population Density'],
     'income': ['STATE', 'zipcode', 'N1', 'N2', 'ELDERLY', 'A00100', 'N02650', 'A02650']
+}
+
+FILENAMES = {
+    
 }

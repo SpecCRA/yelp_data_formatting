@@ -15,8 +15,9 @@ from utils import preprocessing
 TESTING = True
 PRECPROCESS = False
 # If testing is true, include nrows in loading reviews
+NROWS = None
 if TESTING == True:
-    nrows = 100000
+    NROWS = 100000
 
 # Append using loc:
 # by state
@@ -43,6 +44,7 @@ USER_CONFIG = config.USER_DTYPES
 # Export cleaned files and delete old dataframe from ram
 
 # Start loading Yelp data
+# Load businesses first
 # Businesses
 
 # Reviews

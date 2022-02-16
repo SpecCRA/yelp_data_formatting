@@ -11,7 +11,7 @@ import numpy as np
 import sys
 
 sys.path.insert(0, '..')
-from configs import config
+from configs import config, state_refs
 
 
 # Helper functions
@@ -57,11 +57,16 @@ def _process_cpvi(cpvi):
     else:
         return 0
 
+def _format_state(df, colname):
+    df['state'] = df[colname].str.title()
+    df['state'] = df['state'].apply(lambda state: state_refs.us_state_to_abbrev[state])
+    return df
+
 
 def _clean_cpvi(df):
     df.drop(df.tail(1).index, inplace=True)
     df['pvi'] = df['PVI'].apply(_process_cpvi)
-    df['state'] = df['State'].str.upper()
+    df = _format_state(df, 'State')
     df = df[['state', 'pvi']]
     return df
 
@@ -69,17 +74,21 @@ def _clean_cpvi(df):
 # Load and process outside data sources
 
 # County
-def load_county_data(filepath):
-    df = (load_file(filepath, index_col=0).
+def load_county_data(filepath, cols):
+    df = (load_file(filepath, usecols=cols).
           pipe(_clean_county)
           )
+    df.columns = ['state', 'county_name', 'perc_diffs']
 
     return df
 
 
 # State
 def load_state_data(filepath):
-    return load_file(filepath, index_col=0)
+    df = (load_file(filepath, index_col=0).
+            pipe(_format_state, 'state')
+          )
+    return df
 
 
 # CPI

@@ -53,6 +53,11 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Make a bar chart to count how many reviews are in each state.
 * Additional EDA.
 
+## Next session:
+
+* Test Yelp data loading functions.
+* Add functionality to add items by zip code and state.
+
 ## Tools
 
 * Jupyter Lab
