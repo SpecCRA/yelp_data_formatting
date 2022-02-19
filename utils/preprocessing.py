@@ -86,7 +86,8 @@ def load_county_data(filepath, cols):
 # State
 def load_state_data(filepath):
     df = (load_file(filepath, index_col=0).
-            pipe(_format_state, 'state')
+            pipe(_format_state, 'state').
+            append({'state': 'DC', 'perc_diffs': 0}, ignore_index=True)
           )
     return df
 
@@ -126,8 +127,8 @@ def load_pop_density(filepath, cols):
 
 
 # Income
-def load_income(filepath, cols):
-    df = load_file(filepath, usecols=cols)
+def load_income(filepath, cols, dtype):
+    df = load_file(filepath, usecols=cols, dtypes=dtype)
     df['income_per_return'] = df['A02650'] / df['N1']
     col_names = ['state', 'zipcode', 'n_returns', 'n_individuals', 'n_elderly_returns',
                     'adjusted_gross_income', 'n_retruns_w_tot_income',
