@@ -19,7 +19,21 @@ states_list = list(state_refs.us_state_to_abbrev.values())
 
 
 # Helper cleaning functions
-def extract_value_to_append():
+def extract_value_to_append(matching_value, matching_colname,
+                            source_state_or_zip_colname, source_df):
+    pass
+
+def _split_dates(reviews_df):
+    reviews_df['date'] = pd.to_datetime(reveiws_df['date'])
+    reviews_df['year'] = reviews_df['date'].dt.year
+    reviews_df['month'] = reviews_df['date'].dt.month
+    reviews_df['day'] = reviews_df['date'].dt.day
+    return reviews_df
+
+
+def _get_cpi_by_zip(county_df, zip_df, zipcode, state):
+    # slice by state first
+    # then slice by county - some places have the same county names
     pass
 
 
@@ -62,6 +76,7 @@ def load_reviews(filepath, usecols, dtype, business_list, nrows=None):
                     )
             df.append(chunk)
     output = pd.concat(df, ignore_index=True)
+    output = _split_dates(output)
     return output
 
 
@@ -84,14 +99,12 @@ def load_bussiness_data(filepath, dtype, usecols):
 
 
 
-# Append zip code to reviews
-
-# Add feature by zip code
-
-# Add feature by state
+# Append zip code to reviews - DONE
+# Add ideology with bespoke function
+# Add by state/zip function
 
 # Add pop density ahead
 
 # Add pop density before
 
-# Add income
+# Add income by state

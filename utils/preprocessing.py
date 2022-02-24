@@ -45,6 +45,9 @@ def _clean_county(df):
 def _clean_zips(zipcode_df):
     zipcode_df['county'] = zipcode_df['county'].str.lower()
     zipcode_df.loc[len(zipcode_df)] = ['02101', 'MA', 'suffolk county']
+    zipcode_df.dropna(subset=['county'], inplace=True)
+    zipcode_df['county_name'] = zipcode_df['county'].apply(_fix_county_name)
+    zipcode_df.drop(columns='county', inplace=True)
     return zipcode_df
 
 
