@@ -48,6 +48,7 @@ def _clean_zips(zipcode_df):
     zipcode_df.dropna(subset=['county'], inplace=True)
     zipcode_df['county_name'] = zipcode_df['county'].apply(_fix_county_name)
     zipcode_df.drop(columns='county', inplace=True)
+    zipcode_df.rename(columns={'zip':'zipcode'}, inplace=True)
     return zipcode_df
 
 

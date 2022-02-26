@@ -40,6 +40,10 @@ INCOME_FILEPATH = 'data/zipcode2019/19zpallagi.csv'
 # Configurations
 USER_CONFIG = config.USER_DTYPES
 
+# List of things to add by zip
+# list of things to add by state
+# CPI by state and county
+
 # Load and clean all additional files
 # Export cleaned files and delete old dataframe from ram
 
