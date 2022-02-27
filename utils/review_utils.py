@@ -19,9 +19,6 @@ states_list = list(state_refs.us_state_to_abbrev.values())
 
 
 # Helper cleaning functions
-def extract_value_to_append(matching_value, matching_colname,
-                            source_state_or_zip_colname, source_df):
-    pass
 
 def _split_dates(reviews_df):
     reviews_df['date'] = pd.to_datetime(reviews_df['date'])
@@ -32,63 +29,66 @@ def _split_dates(reviews_df):
 
 
 def _match_zip_to_county(zipcode, zipcode_df):
-    return zipcode_df[zipcode_df['zip'] == zipcode]['county_name'].iloc[0]
+     data = zipcode_df[zipcode_df['zipcode'] == zipcode][['state', 'county_name']]
+     state, county_name = data['state'].iloc[0], data['county_name'].iloc[0]
+     return state, county_name
 
 
-def _get_cpi_by_zip(county_df, zip_df, zipcode, state):
-    # slice by state first
-    # then slice by county - some places have the same county names
-    pass
+
+def _append_cpi_by_zip(reviews_df, county_df, zip_df):
+    zips_list = set(reviews_df['business_zipcode'])
+
+    for zipcode in tqdm(zips_list):
+        state = reviews_df.loc[reviews_df['business_zipcode'] == zipcode]['state'].iloc[0]
+        county_name = _match_zip_to_county(zipcode, zip_df)
+
+        county_ideology = county_df[(county_df['state'] == state) & 
+                            (county_df['county_name'] == county_name)]['perc_diffs'].iloc[0]
+
+        reviews_df.loc[reviews_df['business_zipcode'] == zipcode, 'business_county_ideology'] = county_ideology
+
+    return reviews_df
 
 
-def _get_cpi_by_state():
-    pass
-
-
-def add_cpi():
-    # grab value by county
-    # grab value by state
-
-    pass
-
-
-def add_values_by_state(states_list=states_list, supplemental_df,
-                        supplemental_colnames: list, reviews_df, new_colnames: list):
-    for state in tqdm(states_list):
-        values_to_append = list()
-        for i in len(range(supplemental_dfs)):
-            values_to_append.append(supplemental_df[i][supplemental_df[i]['state'] == state][supplemental_colname].iloc[0])
-
-        reviews_df.loc[reviews_df['business_state'] == state,
-                        new_colnames
-        ] = values_to_append
+def _append_pvi_by_state(states_pvi_df, reviews_df, states_list=states_list, supplemental_colnames=['perc_diffs'], 
+                            new_colnames=['business_state_ideology']):
+    # can add with other state
+    reviews_df = add_values_by_location(
+        states_list, states_pvi_df, 'state', supplemental_colnames, reviews_df, new_colnames
+        )
     
     return reviews_df
 
 
-def add_values_by_location(location_list:list , supplemental_df, state_or_zip,
+def add_pvi(reviews_df, zipcode_df, county_pvi_df, states_pvi_df, states_list=states_list):
+    # grab value by count
+    # loop through zips
+    print('Adding PVI by zip code...')
+    reviews_df = _append_cpi_by_zip(reviews_df, county_pvi_df, zipcode_df)
+
+
+    # grab value by state
+    print('Adding PVI by state...')
+    reviews_df = _append_pvi_by_state(states_list, states_pvi_df, reviews_df)
+
+    return reviews_df
+
+
+def add_values_by_location(location_list:list , supplemental_dfs, state_or_zip,
                         supplemental_colnames: list, reviews_df, new_colnames: list):
 # this is a more generalized version of 'add_values_by_state'
+# This doesn't work
+# Create a key:value pair for dataframe and colnames
     for location in tqdm(location_list):
         values_to_append = list()
         for i in len(range(supplemental_dfs)):
-            values_to_append.append(supplemental_df[i][supplemental_df[i][state_or_zip] == location][supplemental_colname].iloc[0])
+            values_to_append.append(supplemental_dfs[i][supplemental_dfs[i][state_or_zip] == location][supplemental_colname].iloc[0])
 
         reviews_df.loc[reviews_df[f"business_{state_or_zip}"] == location,
                         new_colnames
         ] = values_to_append
     
     return reviews_df
-
-
-def add_value_by_zip(reviews_df, supplemental_df, supplemental_colnames:list, new_colnames: list):
-    zips_list = set(reviews_df['business_zipcode'])
-    for zipcode in tqdm(zips_list):
-        values_to_append = list()
-        for i in len(range(supplemental_dfs)):
-            values_to_append.append(supplemental_df[i][supplemental_df[i]['state'] == state][supplemental_colname].iloc[0])
-        pass
-    pass
 
 
 def add_zips_to_reviews(reviews: pd.DataFrame, businesses: pd.DataFrame, business_list: list):
@@ -122,7 +122,7 @@ def load_reviews(filepath, usecols, dtype, business_list, nrows=None):
     return output
 
 
-def load_bussiness_data(filepath, dtype, usecols):
+def load_business_data(filepath, dtype, usecols):
     output = list()
     with open(filepath, 'r') as f:
         reader = pd.read_json(f, orient='records', lines=True, chunksize=1000, dtype=dtype)
@@ -137,16 +137,55 @@ def load_bussiness_data(filepath, dtype, usecols):
             output.append(chunk)
 
     output = pd.concat(output, ignore_index=True)
-    output.rename(columns={'postal_code': 'zipcode'})
+    output.rename(columns={'postal_code': 'zipcode'}, inplace=True)
 
     return output
 
 
+def _add_pop_density_forwards(decade, reviews_df, pop_density_df, states_list=states_list):
+    upper_year_limit = decade + 10
+    lower_year_limit = decade
+    
+    for state in STATES_LIST:
+        state_pop_density = pop_density_df[
+            (pop_density_df['year'] == decade) &
+            (pop_density_df['state'] == state)
+        ]['pop_density'].iloc[0]
 
-# Append zip code to reviews - DONE
-# Add ideology with bespoke function
-# Add by state/zip function - DONE
+        reviews_df.loc[
+            (reviews_df['year'].between(lower_year_limit, upper_year_limit, inclusive='right')) &
+            (reviews_df['business_state'] == state),
+            ['population_density_backwards']
+        ] = state_pop_density
 
-# Add pop density ahead
+        reviews_df.loc[
+            (reviews_df['year'] > 2020), ['population_density_backwards']
+        ] = state_pop_density
 
-# Add pop density before
+
+def _add_pop_density_backwards(decade, reviews_df, pop_density_df, states_list=states_list):
+    upper_year_limit = decade
+    lower_year_limit = decade-10
+
+    for state in STATES_LIST:
+        state_pop_density = pop_density_df[
+            (pop_density_df['year'] == decade) &
+            (pop_density_df['state'] == state)
+        ]['pop_density'].iloc[0]
+
+        reviews_df.loc[
+            (reviews_df['year'].between(lower_year_limit, upper_year_limit, inclusive='right')) &
+            (REVIEreviews_dfWS['business_state'] == state),
+            ['population_density_forwards']
+            ] = state_pop_density
+
+    return reviews_df
+
+
+def add_pop_densities(decades:list, reviews_df, pop_density_df):
+    for decade in decades:
+        reviews_df = _add_pop_density_forwards(decade, reviews_df, pop_density_df)
+        reviews_df = _add_pop_density_backwards(decade, reviews_df, pop_density_df)
+
+    return reviews_df
+
