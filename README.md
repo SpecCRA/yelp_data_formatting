@@ -23,6 +23,8 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 * Dataset only contains restaurants.
 * Restaurants' review totals and average star rating is based solely on this dataset.
 * IRS adjusted gross income doc: https://www.irs.gov/e-file-providers/definition-of-adjusted-gross-income
+* Zipcodes that are not in the income dataset get a neighboring zipcode
+  * Missing zipcode + 1
 
 
 ## Dataset sources
@@ -55,8 +57,8 @@ This repo includes all code for processing Yelp's open reviews dataset. Dataset 
 
 ## Next session:
 
-* Test Yelp data loading functions.
-* Add functionality to add items by zip code and state.
+* Add PVI by zip is broken - some zipcodes must be missing somewhere and need to be processed.
+* Adding PVI by state works fine.
 
 ## Tools
 

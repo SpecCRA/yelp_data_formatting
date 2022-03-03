@@ -134,6 +134,8 @@ def load_pop_density(filepath, cols):
 def load_income(filepath, cols, dtype):
     df = load_file(filepath, usecols=cols, dtypes=dtype)
     df['income_per_return'] = df['A02650'] / df['N1']
+    df.fillna(0, inplace=True)
+    df = df.groupby(['STATE', 'zipcode']).sum().reset_index()
     col_names = ['state', 'zipcode', 'n_returns', 'n_individuals', 'n_elderly_returns',
                     'adjusted_gross_income', 'n_retruns_w_tot_income',
                     'total_income_amount', 'income_per_return']

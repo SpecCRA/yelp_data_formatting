@@ -71,16 +71,18 @@ del BUSINESS_DATA
 ZIPCODE_LIST =  list(REVIEWS['business_zipcode'].unique())
 # Income data
 INCOME_COLS_TO_ADD = list(INCOME_DATA.columns)[2:]
-REVIEWS = ru.add_values_by_location(location_list=ZIPCODE_LIST, supplemental_df=[INCOME_DATA], state_or_zip='zipcode',
+REVIEWS = ru.add_values_by_zipcode(location_list=ZIPCODE_LIST, supplemental_df=INCOME_DATA,
                                     supplemental_colnames=INCOME_COLS_TO_ADD, reviews_df=REVIEWS, new_colnames=INCOME_COLS_TO_ADD)
 
 # Add things by state
 # State political ideology
 # State CPI
-REVIEWS = ru.add_values_by_location(
-        location_list=STATES_LIST, supplemental_df=[CPI], state_or_zip='state',
-        supplemental_colnames=['pvi'], reviews_df=REVIEWS, new_colnames=['business_state_pvi']
-    )
+# REVIEWS = ru.add_values_by_state(
+#     CPI
+#         supplemental_df=CPI, supplemental_colnames=['pvi'], reviews_df=REVIEWS, new_colnames=['business_state_pvi']
+#     )
+REVIEWS = ru.add_values_by_state(supplemental_df=CPI, supplemental_colnames=['pvi'], 
+                                    reviews_df=REVIEWS, new_colnames=['business_state_pvi'])
 
 # Add political ideologies by state and zip
 REVIEWS = ru.add_pvi(REVIEWS, ZIPCODES, COUNTY_PVI, STATES_PVI)

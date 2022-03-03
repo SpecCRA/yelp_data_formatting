@@ -39,7 +39,7 @@ def _append_cpi_by_zip(reviews_df, county_df, zip_df):
     zips_list = set(reviews_df['business_zipcode'])
 
     for zipcode in tqdm(zips_list):
-        state = reviews_df.loc[reviews_df['business_zipcode'] == zipcode]['state'].iloc[0]
+        state = reviews_df.loc[reviews_df['business_zipcode'] == zipcode]['business_state'].iloc[0]
         county_name = _match_zip_to_county(zipcode, zip_df)
 
         county_ideology = county_df[(county_df['state'] == state) & 
@@ -50,44 +50,67 @@ def _append_cpi_by_zip(reviews_df, county_df, zip_df):
     return reviews_df
 
 
-def _append_pvi_by_state(states_pvi_df, reviews_df, states_list=states_list, supplemental_colnames=['perc_diffs'], 
+def _append_pvi_by_state(states_pvi_df, reviews_df, supplemental_colnames=['perc_diffs'], 
                             new_colnames=['business_state_ideology']):
-    # can add with other state
-    reviews_df = add_values_by_location(
-        states_list, states_pvi_df, 'state', supplemental_colnames, reviews_df, new_colnames
+    reviews_df = add_values_by_state(
+        states_pvi_df, supplemental_colnames, reviews_df, new_colnames
         )
     
     return reviews_df
 
+def _add_one_to_zipcode(zipcode):
+    zipcode = int(zipcode)
+    zipcode += 1
+    zipcode = str(zipcode)
+    zipcode = (5 - len(zipcode)) * '0' + zipcode
+    return zipcode
 
-def add_pvi(reviews_df, zipcode_df, county_pvi_df, states_pvi_df, states_list=states_list):
-    # grab value by count
-    # loop through zips
+def _check_zipcode(zipcode: np.str, zipcode_list):
+    if zipcode in zipcode_list:
+        return zipcode
+    else:
+        new_zipcode = _add_one_to_zipcode(zipcode)
+        return new_zipcode
+
+
+def add_pvi(reviews_df, zipcode_df, county_pvi_df, states_pvi_df):
     print('Adding PVI by zip code...')
     reviews_df = _append_cpi_by_zip(reviews_df, county_pvi_df, zipcode_df)
 
 
     # grab value by state
     print('Adding PVI by state...')
-    reviews_df = _append_pvi_by_state(states_list, states_pvi_df, reviews_df)
+    reviews_df = _append_pvi_by_state(states_pvi_df, reviews_df)
 
     return reviews_df
 
 
-def add_values_by_location(location_list:list , supplemental_dfs, state_or_zip,
+def add_values_by_zipcode(location_list:list , supplemental_df,
                         supplemental_colnames: list, reviews_df, new_colnames: list):
-# this is a more generalized version of 'add_values_by_state'
-# This doesn't work
-# Create a key:value pair for dataframe and colnames
-    for location in tqdm(location_list):
-        values_to_append = list()
-        for i in len(range(supplemental_dfs)):
-            values_to_append.append(supplemental_dfs[i][supplemental_dfs[i][state_or_zip] == location][supplemental_colname].iloc[0])
 
-        reviews_df.loc[reviews_df[f"business_{state_or_zip}"] == location,
+    supplemental_zipcodes = list(supplemental_df['zipcode'].unique())
+    for location in tqdm(location_list):
+        fixed_location = _check_zipcode(location, supplemental_zipcodes)
+        values_to_append = list(supplemental_df[supplemental_df['zipcode'] == fixed_location][supplemental_colnames].iloc[0])
+
+        reviews_df.loc[reviews_df[f"business_zipcode"] == location,
                         new_colnames
         ] = values_to_append
-    
+
+    return reviews_df
+
+
+def add_values_by_state(supplemental_df, supplemental_colnames: list,
+                            reviews_df, new_colnames:list):
+    states_list = list(reviews_df['business_state'].unique())
+    for state in states_list:
+        values_to_append = list(supplemental_df[supplemental_df['state'] == state][supplemental_colnames].iloc[0])
+        print(values_to_append)
+        if len(new_colnames) == 1:
+            reviews_df.loc[reviews_df['business_state'] == state, new_colnames] = values_to_append[0]
+        else:
+            reviews_df.loc[reviews_df['business_state'] == state, new_colnames] = values_to_append
+
     return reviews_df
 
 
