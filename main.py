@@ -13,22 +13,14 @@ from configs import config, state_refs
 from utils import preprocessing as pp
 from utils import review_utils as ru
 
-TESTING = True # Change this line to False when loading in all data
+print('Script starting...')
+
+TESTING = False # Change this line to False when loading in all data
 PRECPROCESS = False
-# If testing is true, include nrows in loading reviews
-NROWS = None
-if TESTING == True:
-    NROWS = 1000
 
-# Append using loc:
-# by state
-# by county name
-
-# File paths and URLs required for script
 # Yelp files
 BUSINESS_DATA_FILEPATH = 'data/yelp_academic_dataset_business.json'
 REVIEWS_DATA_FILEPATH = 'data/yelp_academic_dataset_review.json'
-USERS_DATA_FILEPATH = 'data/yelp_academic_dataset_user.json'
 STATES_LIST = list(state_refs.us_state_to_abbrev.values())
 
 # Additional data files
@@ -40,6 +32,8 @@ POP_DENSITY_FILEPATH = 'data/apportionment.csv'
 INCOME_FILEPATH = 'data/zipcode2019/19zpallagi.csv'
 
 # Begin preprocessing files:
+# Remove loading these into memory
+# Proprocess files if needed, then load each file in separately before deleting them from memory.
 COUNTY_PVI = pp.load_county_data(COUNTY_DATA_FILEPATH, config.COLS['county'])
 STATES_PVI = pp.load_state_data(STATES_DATA_FILEPATH)
 CPI = pp.load_cpi_data(CPI_URL)
@@ -48,23 +42,24 @@ INCOME_DATA = pp.load_income(INCOME_FILEPATH, config.COLS['income'], config.INCO
 POP_DENSITY = pp.load_pop_density(POP_DENSITY_FILEPATH, config.COLS['population'])
 
 
-# List of things to add by zip
-# list of things to add by state
-# CPI by state and county
-
-# Load and clean all additional files
-# Export cleaned files and delete old dataframe from ram
+# read_json() requires me to designate how many rows to load reviews
+if TESTING:
+    NROWS = 200000
+else:
+    with open(REVIEWS_DATA_FILEPATH, 'r') as f:
+        NROWS = len(f.readlines())
+        print(f"Number of lines: {NROWS}")
 
 # Start loading Yelp data
 # Load businesses first
 BUSINESS_DATA = ru.load_business_data(BUSINESS_DATA_FILEPATH, config.BUSINESS_DTYPES, config.COLS['business'])
 BUSINESS_LIST = list(BUSINESS_DATA['business_id'].unique())
+
 # Businesses
 
 # Reviews
 REVIEWS = ru.load_reviews(REVIEWS_DATA_FILEPATH, config.COLS['reviews'], config.REVIEW_DTYPES, BUSINESS_LIST, NROWS)
 REVIEWS = ru.add_zips_to_reviews(REVIEWS, BUSINESS_DATA, BUSINESS_LIST)
-
 del BUSINESS_DATA
 
 # Add things by zipcode
@@ -74,13 +69,7 @@ INCOME_COLS_TO_ADD = list(INCOME_DATA.columns)[2:]
 REVIEWS = ru.add_values_by_zipcode(location_list=ZIPCODE_LIST, supplemental_df=INCOME_DATA,
                                     supplemental_colnames=INCOME_COLS_TO_ADD, reviews_df=REVIEWS, new_colnames=INCOME_COLS_TO_ADD)
 
-# Add things by state
-# State political ideology
-# State CPI
-# REVIEWS = ru.add_values_by_state(
-#     CPI
-#         supplemental_df=CPI, supplemental_colnames=['pvi'], reviews_df=REVIEWS, new_colnames=['business_state_pvi']
-#     )
+# Add state CPI data
 REVIEWS = ru.add_values_by_state(supplemental_df=CPI, supplemental_colnames=['pvi'], 
                                     reviews_df=REVIEWS, new_colnames=['business_state_pvi'])
 
@@ -91,15 +80,8 @@ REVIEWS = ru.add_pvi(REVIEWS, ZIPCODES, COUNTY_PVI, STATES_PVI)
 # Add population densities
 REVIEWS = ru.add_pop_densities(decades=[2000, 2010, 2020], reviews_df=REVIEWS, pop_density_df=POP_DENSITY)
 
-
 # Calculate average rating
+REVIEWS = ru.calculate_mean_rating(REVIEWS)
 
-
-
-
-# To do
-# Write script to load main data files
-# Add rating average
-# Clean everything!
-
-REVIEWS.to_csv('test.csv')
+REVIEWS.to_csv('yelp_data.csv')
+print('File exported. Script done.')

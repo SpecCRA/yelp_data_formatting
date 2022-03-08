@@ -42,6 +42,13 @@ def _clean_county(df):
     return df
 
 
+def _convert_state_names_to_abbr(full_state_name: str):
+    state_name = full_state_name.title()
+
+    return state_refs.us_state_to_abbrev[state_name]
+
+
+
 def _clean_zips(zipcode_df):
     zipcode_df['county'] = zipcode_df['county'].str.lower()
     zipcode_df.loc[len(zipcode_df)] = ['02101', 'MA', 'suffolk county']
@@ -125,7 +132,7 @@ def load_pop_density(filepath, cols):
           )
     # rename columns
     df.columns = renamed_cols
-    df['state'] = df['state'].str.upper()
+    df['state'] = df['state'].str.title().apply(_convert_state_names_to_abbr)
 
     return df
 

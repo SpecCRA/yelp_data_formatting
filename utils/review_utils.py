@@ -37,14 +37,10 @@ def _match_zip_to_county(zipcode, zipcode_df):
 
 def _append_cpi_by_zip(reviews_df, county_df, zip_df):
     zips_list = set(reviews_df['business_zipcode'])
-
     for zipcode in tqdm(zips_list):
-        state = reviews_df.loc[reviews_df['business_zipcode'] == zipcode]['business_state'].iloc[0]
-        county_name = _match_zip_to_county(zipcode, zip_df)
-
-        county_ideology = county_df[(county_df['state'] == state) & 
+        state, county_name = _match_zip_to_county(zipcode, zip_df)
+        county_ideology = county_df[(county_df['state'] == state) &
                             (county_df['county_name'] == county_name)]['perc_diffs'].iloc[0]
-
         reviews_df.loc[reviews_df['business_zipcode'] == zipcode, 'business_county_ideology'] = county_ideology
 
     return reviews_df
@@ -65,20 +61,19 @@ def _add_one_to_zipcode(zipcode):
     zipcode = (5 - len(zipcode)) * '0' + zipcode
     return zipcode
 
+
 def _check_zipcode(zipcode: np.str, zipcode_list):
-    if zipcode in zipcode_list:
-        return zipcode
-    else:
+    if zipcode not in zipcode_list:
         new_zipcode = _add_one_to_zipcode(zipcode)
-        return new_zipcode
+        return _check_zipcode(new_zipcode, zipcode_list)
+    else:
+        return zipcode
 
 
 def add_pvi(reviews_df, zipcode_df, county_pvi_df, states_pvi_df):
     print('Adding PVI by zip code...')
     reviews_df = _append_cpi_by_zip(reviews_df, county_pvi_df, zipcode_df)
 
-
-    # grab value by state
     print('Adding PVI by state...')
     reviews_df = _append_pvi_by_state(states_pvi_df, reviews_df)
 
@@ -105,7 +100,6 @@ def add_values_by_state(supplemental_df, supplemental_colnames: list,
     states_list = list(reviews_df['business_state'].unique())
     for state in states_list:
         values_to_append = list(supplemental_df[supplemental_df['state'] == state][supplemental_colnames].iloc[0])
-        print(values_to_append)
         if len(new_colnames) == 1:
             reviews_df.loc[reviews_df['business_state'] == state, new_colnames] = values_to_append[0]
         else:
@@ -129,11 +123,10 @@ def add_zips_to_reviews(reviews: pd.DataFrame, businesses: pd.DataFrame, busines
 
 def load_reviews(filepath, usecols, dtype, business_list, nrows=None):
     df = list()
-
+    print('Reading in reviews data file...')
     with open(filepath, 'r') as f:
         reader = pd.read_json(f, orient='records', lines=True,
-                              chunksize=100, nrows=nrows, dtype=dtype)
-        
+                              chunksize=1000, nrows=nrows, dtype=dtype)
         for chunk in reader:
             chunk = (chunk.
                      filter(items=usecols).
@@ -142,11 +135,13 @@ def load_reviews(filepath, usecols, dtype, business_list, nrows=None):
             df.append(chunk)
     output = pd.concat(df, ignore_index=True)
     output = _split_dates(output)
+    print('Reviews file loaded.')
     return output
 
 
 def load_business_data(filepath, dtype, usecols):
     output = list()
+    print('Reading in business data file...')
     with open(filepath, 'r') as f:
         reader = pd.read_json(f, orient='records', lines=True, chunksize=1000, dtype=dtype)
 
@@ -155,7 +150,8 @@ def load_business_data(filepath, dtype, usecols):
                      dropna(subset=['categories']).
                      filter(items=usecols).
                      query('state == @states_list').
-                     query('categories.str.contains("Restaurants")', engine='python')
+                     query('categories.str.contains("Restaurants")', engine='python').
+                     query('postal_code.str.len() == 5')
                     )
             output.append(chunk)
 
@@ -165,11 +161,13 @@ def load_business_data(filepath, dtype, usecols):
     return output
 
 
-def _add_pop_density_forwards(decade, reviews_df, pop_density_df, states_list=states_list):
+def _add_pop_density_forwards(decade, reviews_df, pop_density_df):
     upper_year_limit = decade + 10
     lower_year_limit = decade
+
+    states_list = list(reviews_df['business_state'].unique())
     
-    for state in STATES_LIST:
+    for state in states_list:
         state_pop_density = pop_density_df[
             (pop_density_df['year'] == decade) &
             (pop_density_df['state'] == state)
@@ -185,12 +183,16 @@ def _add_pop_density_forwards(decade, reviews_df, pop_density_df, states_list=st
             (reviews_df['year'] > 2020), ['population_density_backwards']
         ] = state_pop_density
 
+    return reviews_df
+
 
 def _add_pop_density_backwards(decade, reviews_df, pop_density_df, states_list=states_list):
     upper_year_limit = decade
     lower_year_limit = decade-10
 
-    for state in STATES_LIST:
+    states_list = list(reviews_df['business_state'].unique())
+
+    for state in states_list:
         state_pop_density = pop_density_df[
             (pop_density_df['year'] == decade) &
             (pop_density_df['state'] == state)
@@ -198,7 +200,7 @@ def _add_pop_density_backwards(decade, reviews_df, pop_density_df, states_list=s
 
         reviews_df.loc[
             (reviews_df['year'].between(lower_year_limit, upper_year_limit, inclusive='right')) &
-            (REVIEreviews_dfWS['business_state'] == state),
+            (reviews_df['business_state'] == state),
             ['population_density_forwards']
             ] = state_pop_density
 
@@ -212,3 +214,17 @@ def add_pop_densities(decades:list, reviews_df, pop_density_df):
 
     return reviews_df
 
+
+def calculate_mean_rating(reviews_df):
+    mean_ratings = reviews_df.groupby('business_id').mean()['stars'].reset_index()
+    mean_ratings.columns = ['business_id', 'mean_stars']
+
+    count_ratings = reviews_df['business_id'].value_counts().reset_index()
+    count_ratings.columns = ['business_id', 'review_count']
+    
+    reviews_df = (
+        reviews_df.merge(mean_ratings, how='left')
+            .merge(count_ratings, how='left')
+        )
+
+    return reviews_df
